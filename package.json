@@ -10,6 +10,12 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.5",
+    "@tiptap/extension-image": "^3.30.6",
+    "@tiptap/extension-link": "^3.30.6",
+    "@tiptap/extension-placeholder": "^3.30.6",
+    "@tiptap/pm": "^3.30.6",
+    "@tiptap/react": "^3.30.6",
+    "@tiptap/starter-kit": "^3.30.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.38.0",

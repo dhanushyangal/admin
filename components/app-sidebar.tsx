@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Droplets, LayoutDashboard } from "lucide-react";
+import { Droplets, FileText, LayoutDashboard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,7 @@ import { HydrillaMark } from "@/components/hydrilla-mark";
 const items = [
   { href: "/", label: "Home", icon: LayoutDashboard },
   { href: "/water", label: "Platform keys", icon: Droplets },
+  { href: "/blog", label: "Blog", icon: FileText },
 ];
 
 export function AppSidebar() {
@@ -40,7 +41,10 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const active = pathname === item.href;
+                const active =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={active}>
