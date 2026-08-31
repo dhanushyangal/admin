@@ -20,7 +20,7 @@ import { HydrillaMark } from "@/components/hydrilla-mark";
 
 const items = [
   { href: "/", label: "Home", icon: LayoutDashboard },
-  { href: "/water", label: "Water API", icon: Droplets },
+  { href: "/water", label: "Platform keys", icon: Droplets },
 ];
 
 export function AppSidebar() {

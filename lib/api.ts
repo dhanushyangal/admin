@@ -1,4 +1,12 @@
-export type WaterProvider = "anthropic" | "openai" | "gemini" | "openrouter" | "cursor";
+export type WaterProvider = "anthropic" | "openai" | "google" | "gemini" | "openrouter" | "cursor";
+
+export type ConnectorPublic = {
+  id: "anthropic" | "openai" | "google" | "openrouter" | "cursor";
+  name: string;
+  product: string;
+  docsUrl: string;
+  keyPlaceholder: string;
+};
 
 export type WaterKeyMeta = {
   provider: WaterProvider;
@@ -34,6 +42,7 @@ function unreachableMessage(): string {
 export async function fetchOverview(getToken: () => Promise<string | null>): Promise<{
   userCount: number;
   keys: WaterKeyMeta[];
+  connectors: ConnectorPublic[];
 }> {
   let res: Response;
   try {
@@ -45,13 +54,25 @@ export async function fetchOverview(getToken: () => Promise<string | null>): Pro
     throw new Error(unreachableMessage());
   }
   if (!res.ok) throw new Error(await readError(res, "Failed to load overview"));
-  return res.json();
+  const body = (await res.json()) as {
+    userCount: number;
+    keys: WaterKeyMeta[];
+    connectors?: ConnectorPublic[];
+  };
+  return {
+    userCount: body.userCount,
+    keys: body.keys,
+    connectors: body.connectors ?? [],
+  };
 }
 
-export async function fetchWaterKeys(getToken: () => Promise<string | null>): Promise<WaterKeyMeta[]> {
+export async function fetchWaterKeys(getToken: () => Promise<string | null>): Promise<{
+  keys: WaterKeyMeta[];
+  connectors: ConnectorPublic[];
+}> {
   let res: Response;
   try {
-    res = await fetch(`${backendBase()}/api/admin/water-keys`, {
+    res = await fetch(`${backendBase()}/api/admin/api-keys`, {
       headers: await authHeaders(getToken),
       cache: "no-store",
     });
@@ -59,8 +80,8 @@ export async function fetchWaterKeys(getToken: () => Promise<string | null>): Pr
     throw new Error(unreachableMessage());
   }
   if (!res.ok) throw new Error(await readError(res, "Failed to load Water API keys"));
-  const body = (await res.json()) as { keys: WaterKeyMeta[] };
-  return body.keys;
+  const body = (await res.json()) as { keys: WaterKeyMeta[]; connectors?: ConnectorPublic[] };
+  return { keys: body.keys, connectors: body.connectors ?? [] };
 }
 
 export async function saveWaterKey(
@@ -68,7 +89,8 @@ export async function saveWaterKey(
   apiKey: string,
   getToken: () => Promise<string | null>
 ): Promise<WaterKeyMeta> {
-  const res = await fetch(`${backendBase()}/api/admin/water-keys/${provider}`, {
+  const id = provider === "gemini" ? "google" : provider;
+  const res = await fetch(`${backendBase()}/api/admin/api-keys/${id}`, {
     method: "PUT",
     headers: await authHeaders(getToken),
     body: JSON.stringify({ apiKey }),
@@ -82,7 +104,8 @@ export async function deleteWaterKey(
   provider: WaterProvider,
   getToken: () => Promise<string | null>
 ): Promise<void> {
-  const res = await fetch(`${backendBase()}/api/admin/water-keys/${provider}`, {
+  const id = provider === "gemini" ? "google" : provider;
+  const res = await fetch(`${backendBase()}/api/admin/api-keys/${id}`, {
     method: "DELETE",
     headers: await authHeaders(getToken),
   });

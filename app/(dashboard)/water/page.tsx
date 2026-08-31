@@ -12,29 +12,24 @@ import {
   deleteWaterKey,
   fetchWaterKeys,
   saveWaterKey,
+  type ConnectorPublic,
   type WaterKeyMeta,
   type WaterProvider,
 } from "@/lib/api";
 
-const PROVIDERS: { id: WaterProvider; placeholder: string }[] = [
-  { id: "anthropic", placeholder: "sk-ant-..." },
-  { id: "openai", placeholder: "sk-..." },
-  { id: "gemini", placeholder: "AIza..." },
-  { id: "openrouter", placeholder: "sk-or-v1-..." },
-  { id: "cursor", placeholder: "crsr_..." },
-];
-
 export default function WaterPage() {
   const { getToken } = useAuth();
   const [keys, setKeys] = useState<WaterKeyMeta[]>([]);
+  const [connectors, setConnectors] = useState<ConnectorPublic[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setError(null);
     try {
-      const list = await fetchWaterKeys(async () => (await getToken()) ?? null);
-      setKeys(list);
+      const data = await fetchWaterKeys(async () => (await getToken()) ?? null);
+      setKeys(data.keys);
+      setConnectors(data.connectors);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load keys");
     } finally {
@@ -51,9 +46,9 @@ export default function WaterPage() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Water</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Water API</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Platform keys</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Keys saved here are used by every Studio user when they pick a Water model.
+          Used when a member has not added their own key for that provider.
         </p>
       </div>
 
@@ -63,12 +58,11 @@ export default function WaterPage() {
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
         <div className="space-y-3">
-          {PROVIDERS.map((p) => (
+          {connectors.map((p) => (
             <ProviderCard
               key={p.id}
-              provider={p.id}
-              placeholder={p.placeholder}
-              meta={keys.find((k) => k.provider === p.id)}
+              connector={p}
+              meta={keys.find((k) => (k.provider === "gemini" ? "google" : k.provider) === p.id)}
               onChanged={load}
             />
           ))}
@@ -79,13 +73,11 @@ export default function WaterPage() {
 }
 
 function ProviderCard({
-  provider,
-  placeholder,
+  connector,
   meta,
   onChanged,
 }: {
-  provider: WaterProvider;
-  placeholder: string;
+  connector: ConnectorPublic;
   meta?: WaterKeyMeta;
   onChanged: () => Promise<void>;
 }) {
@@ -93,6 +85,7 @@ function ProviderCard({
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const token = async () => (await getToken()) ?? null;
+  const provider = connector.id as WaterProvider;
 
   const save = async () => {
     setBusy(true);
@@ -124,9 +117,12 @@ function ProviderCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-base font-semibold">
-          {meta?.label || provider}
-        </CardTitle>
+        <div>
+          <CardTitle className="text-base font-semibold">{connector.name}</CardTitle>
+          {connector.product ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">{connector.product}</p>
+          ) : null}
+        </div>
         <Badge variant={meta?.configured && meta.status === "valid" ? "default" : "secondary"}>
           {!meta?.configured ? "Not set" : meta.status}
         </Badge>
@@ -141,7 +137,7 @@ function ProviderCard({
             type="password"
             autoComplete="off"
             value={value}
-            placeholder={meta?.configured ? `••••••••${meta.last4 || ""}` : placeholder}
+            placeholder={meta?.configured ? `••••••••${meta.last4 || ""}` : connector.keyPlaceholder}
             onChange={(e) => setValue(e.target.value)}
           />
         </div>

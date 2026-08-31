@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchOverview, type WaterKeyMeta } from "@/lib/api";
+import { fetchOverview, type ConnectorPublic, type WaterKeyMeta } from "@/lib/api";
 
 export default function HomePage() {
   const { getToken } = useAuth();
   const [userCount, setUserCount] = useState<number | null>(null);
   const [keys, setKeys] = useState<WaterKeyMeta[]>([]);
+  const [connectors, setConnectors] = useState<ConnectorPublic[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ export default function HomePage() {
         const data = await fetchOverview(async () => (await getToken()) ?? null);
         setUserCount(data.userCount);
         setKeys(data.keys);
+        setConnectors(data.connectors);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load");
       }
@@ -48,27 +50,30 @@ export default function HomePage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Water keys ready</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Platform keys ready</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-semibold tabular-nums">
-              {userCount === null ? "—" : `${ready} / ${keys.length}`}
+              {userCount === null ? "—" : `${ready} / ${connectors.length || keys.length}`}
             </p>
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold">Water providers</h2>
+        <h2 className="text-sm font-semibold">Providers</h2>
         <div className="divide-y divide-border rounded-xl border bg-card">
-          {keys.map((k) => (
-            <div key={k.provider} className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm">{k.label || k.provider}</span>
-              <Badge variant={k.configured && k.status === "valid" ? "default" : "secondary"}>
-                {!k.configured ? "Not set" : k.status}
-              </Badge>
-            </div>
-          ))}
+          {connectors.map((c) => {
+            const k = keys.find((row) => (row.provider === "gemini" ? "google" : row.provider) === c.id);
+            return (
+              <div key={c.id} className="flex items-center justify-between px-4 py-3">
+                <span className="text-sm">{c.name}</span>
+                <Badge variant={k?.configured && k.status === "valid" ? "default" : "secondary"}>
+                  {!k?.configured ? "Not set" : k.status}
+                </Badge>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
