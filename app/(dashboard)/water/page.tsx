@@ -24,18 +24,19 @@ export default function WaterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    setError(null);
-    try {
-      const data = await fetchWaterKeys(async () => (await getToken()) ?? null);
-      setKeys(data.keys);
-      setConnectors(data.connectors);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load keys");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const load = () =>
+    fetchWaterKeys(async () => (await getToken()) ?? null)
+      .then((data) => {
+        setError(null);
+        setKeys(data.keys);
+        setConnectors(data.connectors);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load keys");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
   useEffect(() => {
     void load();
