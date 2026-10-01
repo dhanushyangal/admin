@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Droplets, FileText, LayoutDashboard } from "lucide-react";
+import { CircleDollarSign, Cpu, Droplets, FileText, LayoutDashboard, Sparkles } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +20,10 @@ import { HydrillaMark } from "@/components/hydrilla-mark";
 
 const items = [
   { href: "/", label: "Home", icon: LayoutDashboard },
-  { href: "/water", label: "Platform keys", icon: Droplets },
+  { href: "/usage", label: "Usage & cost", icon: CircleDollarSign },
+  { href: "/gpu", label: "GPU", icon: Cpu },
+  { href: "/image-keys", label: "Image API keys", icon: Sparkles },
+  { href: "/water", label: "Water model keys", icon: Droplets },
   { href: "/blog", label: "Blog", icon: FileText },
 ];
 

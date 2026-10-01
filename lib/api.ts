@@ -1,3 +1,5 @@
+import type { ImageKeyMeta } from "./image-keys-api";
+
 export type WaterProvider = "anthropic" | "openai" | "google" | "gemini" | "openrouter" | "cursor";
 
 export type ConnectorPublic = {
@@ -12,6 +14,7 @@ export type WaterKeyMeta = {
   provider: WaterProvider;
   label?: string;
   configured: boolean;
+  source?: "database" | "env" | "none";
   last4: string | null;
   status: "unchecked" | "valid" | "invalid";
   lastError: string | null;
@@ -43,26 +46,29 @@ export async function fetchOverview(getToken: () => Promise<string | null>): Pro
   userCount: number;
   keys: WaterKeyMeta[];
   connectors: ConnectorPublic[];
+  imageKeys: ImageKeyMeta[];
 }> {
-  let res: Response;
-  try {
-    res = await fetch(`${backendBase()}/api/admin/overview`, {
-      headers: await authHeaders(getToken),
-      cache: "no-store",
-    });
-  } catch {
+  const res = await fetch(`${backendBase()}/api/admin/overview`, {
+    headers: await authHeaders(getToken),
+    cache: "no-store",
+  }).catch(() => {
     throw new Error(unreachableMessage());
+  });
+
+  if (!res.ok) {
+    throw new Error(await readError(res, "Failed to load overview"));
   }
-  if (!res.ok) throw new Error(await readError(res, "Failed to load overview"));
   const body = (await res.json()) as {
     userCount: number;
     keys: WaterKeyMeta[];
     connectors?: ConnectorPublic[];
+    imageKeys?: ImageKeyMeta[];
   };
   return {
     userCount: body.userCount,
     keys: body.keys,
     connectors: body.connectors ?? [],
+    imageKeys: body.imageKeys ?? [],
   };
 }
 
@@ -70,16 +76,15 @@ export async function fetchWaterKeys(getToken: () => Promise<string | null>): Pr
   keys: WaterKeyMeta[];
   connectors: ConnectorPublic[];
 }> {
-  let res: Response;
-  try {
-    res = await fetch(`${backendBase()}/api/admin/api-keys`, {
-      headers: await authHeaders(getToken),
-      cache: "no-store",
-    });
-  } catch {
+  const res = await fetch(`${backendBase()}/api/admin/api-keys`, {
+    headers: await authHeaders(getToken),
+    cache: "no-store",
+  }).catch(() => {
     throw new Error(unreachableMessage());
+  });
+  if (!res.ok) {
+    throw new Error(await readError(res, "Failed to load Water API keys"));
   }
-  if (!res.ok) throw new Error(await readError(res, "Failed to load Water API keys"));
   const body = (await res.json()) as { keys: WaterKeyMeta[]; connectors?: ConnectorPublic[] };
   return { keys: body.keys, connectors: body.connectors ?? [] };
 }
