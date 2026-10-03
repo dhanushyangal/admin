@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { Power, PowerOff, RefreshCw, RotateCcw, Zap } from "lucide-react";
+import { Power, PowerOff, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  clearGpuQueue,
   fetchGpuStatus,
   restartGpuService,
   runInstanceAction,
@@ -153,6 +154,28 @@ export default function GpuPage() {
     }
   };
 
+  const handleClearQueue = () => {
+    setConfirm({
+      title: "Clear GPU queue?",
+      description:
+        "This will cancel all waiting jobs and remove them from the queue so new generation requests can start without delay.",
+      confirmLabel: "Clear queue",
+      destructive: true,
+      run: async () => {
+        setBusy(true);
+        try {
+          const result = await clearGpuQueue(token);
+          toast.success(result.message || "Queue cleared");
+          await load();
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to clear queue");
+        } finally {
+          setBusy(false);
+        }
+      },
+    });
+  };
+
   const vm = status?.vm.data ?? null;
   const instance = status?.instance.data ?? null;
   const gpu = vm?.gpus.find((g) => !g.error) ?? null;
@@ -234,8 +257,20 @@ export default function GpuPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Queue</CardTitle>
+            {vm && (vm.queue.waiting_jobs > 0 || Boolean(vm.queue.processing_job_id)) ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={busy}
+                onClick={handleClearQueue}
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Clear
+              </Button>
+            ) : null}
           </CardHeader>
           <CardContent className="space-y-1">
             <p className="text-2xl font-semibold tabular-nums">
@@ -419,6 +454,16 @@ export default function GpuPage() {
                 >
                   <RefreshCw />
                   Trim RAM
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={busy || !status?.vm.reachable}
+                  onClick={handleClearQueue}
+                >
+                  <Trash2 />
+                  Clear queue
                 </Button>
               </div>
             </div>

@@ -99,6 +99,17 @@ export function trimMemory(
   );
 }
 
+export function clearGpuQueue(
+  getToken: TokenGetter
+): Promise<{ status: string; cleared_jobs: number; message: string }> {
+  return request(
+    "/api/admin/gpu/clear-queue",
+    { method: "POST" },
+    getToken,
+    "Failed to clear queue"
+  );
+}
+
 export function runInstanceAction(
   action: InstanceAction,
   getToken: TokenGetter
