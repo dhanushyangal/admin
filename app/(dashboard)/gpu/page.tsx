@@ -158,7 +158,7 @@ export default function GpuPage() {
     setConfirm({
       title: "Clear GPU queue?",
       description:
-        "This will cancel all waiting jobs and remove them from the queue so new generation requests can start without delay.",
+        "This will cancel all waiting jobs and remove them from the queue so new requests can start without delay. Any currently running 3D generation will continue without interruption.",
       confirmLabel: "Clear queue",
       destructive: true,
       run: async () => {
