@@ -36,7 +36,11 @@ export type VmSystem = {
     texture_size: number;
     remesh: boolean;
   };
-  queue: { processing_job_id: string | null; waiting_jobs: number; max_queue_length: number };
+  queue: {
+    processing_job_id: string | null;
+    waiting_jobs: number;
+    max_queue_length: number;
+  };
   gpus: GpuDevice[];
   ram: {
     total_mib?: number | null;
@@ -45,7 +49,12 @@ export type VmSystem = {
     swap_total_mib?: number | null;
     swap_used_mib?: number | null;
   };
-  cpu: { count: number | null; load_1m: number; load_5m: number; load_15m: number };
+  cpu: {
+    count: number | null;
+    load_1m: number;
+    load_5m: number;
+    load_15m: number;
+  };
   disk: { total_gib: number; used_gib: number; free_gib: number };
   host_uptime_seconds: number | null;
 };
@@ -65,7 +74,11 @@ export type GpuStatus = {
   instanceName: string;
   zone: string;
   vm: { reachable: boolean; data: VmSystem | null; error: string | null };
-  instance: { configured: boolean; data: GcpInstance | null; error: string | null };
+  instance: {
+    configured: boolean;
+    data: GcpInstance | null;
+    error: string | null;
+  };
   checkedAt: string;
 };
 
@@ -73,51 +86,61 @@ export type RestartMode = "when_idle" | "now";
 export type InstanceAction = "start" | "stop" | "reset";
 
 export function fetchGpuStatus(getToken: TokenGetter): Promise<GpuStatus> {
-  return request<GpuStatus>("/api/admin/gpu", { method: "GET" }, getToken, "Failed to load GPU status");
+  return request<GpuStatus>(
+    "/api/admin/gpu",
+    { method: "GET" },
+    getToken,
+    "Failed to load GPU status",
+  );
 }
 
 export function restartGpuService(
   mode: RestartMode,
-  getToken: TokenGetter
+  getToken: TokenGetter,
 ): Promise<{ status: string; message: string }> {
   return request(
     "/api/admin/gpu/restart",
     { method: "POST", body: JSON.stringify({ mode }) },
     getToken,
-    "Failed to restart GPU service"
+    "Failed to restart GPU service",
   );
 }
 
 export function trimMemory(
-  getToken: TokenGetter
-): Promise<{ status: string; before_rss_mib: number; after_rss_mib: number; freed_mib: number }> {
+  getToken: TokenGetter,
+): Promise<{
+  status: string;
+  before_rss_mib: number;
+  after_rss_mib: number;
+  freed_mib: number;
+}> {
   return request(
     "/api/admin/gpu/trim-memory",
     { method: "POST" },
     getToken,
-    "Failed to trim memory"
+    "Failed to trim memory",
   );
 }
 
 export function clearGpuQueue(
-  getToken: TokenGetter
+  getToken: TokenGetter,
 ): Promise<{ status: string; cleared_jobs: number; message: string }> {
   return request(
     "/api/admin/gpu/clear-queue",
     { method: "POST" },
     getToken,
-    "Failed to clear queue"
+    "Failed to clear queue",
   );
 }
 
 export function runInstanceAction(
   action: InstanceAction,
-  getToken: TokenGetter
+  getToken: TokenGetter,
 ): Promise<{ ok: boolean; operation: string }> {
   return request(
     `/api/admin/gpu/instance/${action}`,
     { method: "POST" },
     getToken,
-    `Failed to ${action} the instance`
+    `Failed to ${action} the instance`,
   );
 }
