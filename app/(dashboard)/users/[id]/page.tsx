@@ -26,6 +26,8 @@ function formatCharge(amount: number, currency: string): string {
 function planLabel(plan: string | null): string {
   if (plan === "starter") return "Starter";
   if (plan === "pro") return "Pro";
+  if (plan === "slot") return "Slot";
+  if (plan === "slot_pro") return "Slot Pro";
   if (plan === "creator") return "Creator";
   if (plan === "studio") return "Studio";
   return plan || "—";
@@ -104,6 +106,22 @@ export default function UserDetailPage() {
               <p className="mt-2 text-xs text-muted-foreground">Joined {formatWhen(user.createdAt)}</p>
             </CardContent>
           </Card>
+          {user.slot ? (
+            <Card className="sm:col-span-3">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Hour</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-semibold tabular-nums">{user.slot.label || "No hour yet"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {user.slot.label
+                    ? `${user.slot.open ? "Open now" : "Closed now"} · ${user.slot.timezone?.replaceAll("_", " ")} · ${user.slot.durationHours} hour${user.slot.durationHours === 1 ? "" : "s"}`
+                    : "This account has not chosen an hour."}
+                  {user.slot.changedOn ? ` · last change ${formatWhen(user.slot.changedOn)}` : ""}
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       ) : null}
 

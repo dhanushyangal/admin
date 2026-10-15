@@ -27,6 +27,8 @@ function formatCharge(amount: number | null, currency: string | null): string {
 function planLabel(plan: string | null): string {
   if (plan === "starter") return "Starter";
   if (plan === "pro") return "Pro";
+  if (plan === "slot") return "Slot";
+  if (plan === "slot_pro") return "Slot Pro";
   if (plan === "creator") return "Creator";
   if (plan === "studio") return "Studio";
   return plan || "Free";
@@ -115,7 +117,14 @@ export default function UsersPage() {
                   </Link>
                   <p className="text-xs text-muted-foreground">{user.email || user.id}</p>
                 </TableCell>
-                <TableCell>{planLabel(user.plan)}</TableCell>
+                <TableCell>
+                  {planLabel(user.plan)}
+                  {user.slot ? (
+                    <p className="text-xs text-muted-foreground">
+                      {user.slot.label ? `${user.slot.label} · ${user.slot.open ? "open" : "closed"}` : "No hour yet"}
+                    </p>
+                  ) : null}
+                </TableCell>
                 <TableCell>
                   {user.paying ? <Badge>Paying</Badge> : <Badge variant="secondary">Free</Badge>}
                   {user.subscriptionStatus ? (

@@ -26,6 +26,18 @@ export type AdminUserRow = {
   lastPaymentCurrency: string | null;
   lastPaymentStatus: string | null;
   paymentCount: number;
+  /** Present only for Slot and Slot Pro. Null hour means they have not chosen one yet. */
+  slot: AdminSlot | null;
+};
+
+export type AdminSlot = {
+  plan: string | null;
+  timezone: string | null;
+  startHour: number | null;
+  durationHours: number;
+  label: string | null;
+  open: boolean;
+  changedOn: string | null;
 };
 
 export type AdminPayment = {
