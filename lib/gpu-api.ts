@@ -69,6 +69,20 @@ export type GcpInstance = {
   externalIp: string | null;
 };
 
+export type GcpInstanceItem = GcpInstance & {
+  zone: string;
+  isTarget: boolean;
+  hasStaticIp: boolean;
+  staticIpName?: string | null;
+};
+
+export type StaticIpInfo = {
+  name: string;
+  address: string;
+  attachedToInstance: string | null;
+  status: string;
+};
+
 export type GpuStatus = {
   gateway: string;
   instanceName: string;
@@ -79,6 +93,8 @@ export type GpuStatus = {
     data: GcpInstance | null;
     error: string | null;
   };
+  instances?: GcpInstanceItem[];
+  staticIp?: StaticIpInfo | null;
   checkedAt: string;
 };
 
@@ -136,11 +152,54 @@ export function clearGpuQueue(
 export function runInstanceAction(
   action: InstanceAction,
   getToken: TokenGetter,
+  instanceName?: string,
 ): Promise<{ ok: boolean; operation: string }> {
   return request(
     `/api/admin/gpu/instance/${action}`,
-    { method: "POST" },
+    { method: "POST", body: JSON.stringify({ instance: instanceName }) },
     getToken,
     `Failed to ${action} the instance`,
+  );
+}
+
+export function updateGatewayUrl(
+  url: string,
+  getToken: TokenGetter,
+): Promise<{ ok: boolean; gateway: string }> {
+  return request(
+    "/api/admin/gpu/gateway",
+    { method: "POST", body: JSON.stringify({ url }) },
+    getToken,
+    "Failed to update GPU gateway URL",
+  );
+}
+
+export function switchTargetInstance(
+  instance: string,
+  getToken: TokenGetter,
+): Promise<{ ok: boolean; instance: string }> {
+  return request(
+    "/api/admin/gpu/target-instance",
+    { method: "POST", body: JSON.stringify({ instance }) },
+    getToken,
+    "Failed to switch target instance",
+  );
+}
+
+export function shiftStaticIp(
+  targetInstance: string,
+  getToken: TokenGetter,
+): Promise<{
+  ok: boolean;
+  success: boolean;
+  message: string;
+  attachedTo: string;
+  address: string;
+}> {
+  return request(
+    "/api/admin/gpu/shift-static-ip",
+    { method: "POST", body: JSON.stringify({ targetInstance }) },
+    getToken,
+    "Failed to shift permanent static IP",
   );
 }
